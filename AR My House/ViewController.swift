@@ -53,7 +53,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 extension ViewController {
     
     func placeYard() {
-        let scene = SCNScene(named: "art.scnassets/Yard.dae")!
+        let scene = SCNScene(named: "art.scnassets/Yard.scn")!
         let node = scene.rootNode.clone()
         
         node.position = SCNVector3(0, -10, -25)
