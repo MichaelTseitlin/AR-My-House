@@ -11,7 +11,10 @@ import SceneKit
 import ARKit
 
 class ViewController: UIViewController, ARSCNViewDelegate {
-
+    
+    var placeCounter = 0
+    var isYardPlaced = false
+    
     @IBOutlet var sceneView: ARSCNView!
     
     override func viewDidLoad() {
@@ -19,15 +22,12 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         //Enable default lighting
         sceneView.autoenablesDefaultLighting = true
-
+        
         // Set the view's delegate
         sceneView.delegate = self
         
         // Show statistics such as fps and timing information
         sceneView.showsStatistics = true
-        
-        //Place yardes
-        placeYard()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -35,7 +35,10 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Create a session configuration
         let configuration = ARWorldTrackingConfiguration()
-
+        
+        // Enable plane detection
+        configuration.planeDetection = [.horizontal]
+        
         // Run the view's session
         sceneView.session.run(configuration)
     }
@@ -46,23 +49,46 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Pause the view's session
         sceneView.session.pause()
     }
-
 }
 
-// MARK: - Placing 3D Object
+// MARK: - Custom methods
 extension ViewController {
-    
-    func placeYard() {
-        let scene = SCNScene(named: "art.scnassets/Yard.dae")!
-        let node = scene.rootNode.clone()
+    func addYard(at result: ARHitTestResult) {
+        let yardScene = SCNScene(named: "art.scnassets/Yard.scn")
+        guard let yardNode = yardScene?.rootNode.childNode(withName: "Yard", recursively: false) else { return }
         
-        node.position = SCNVector3(0, -10, -25)
-        node.eulerAngles.y = -.pi / 8
-  
+        yardNode.simdTransform = result.worldTransform
+        yardNode.scale = SCNVector3(0.02, 0.02, 0.02)
+        
+        //Add trees to the yard
         let trees = getTreesWithPositions()
-        addChilds(to: node, array: trees)
+        addChilds(to: yardNode, array: trees)
         
-        sceneView.scene.rootNode.addChildNode(node)
+        //Remove all copies
+        sceneView.scene.rootNode.enumerateChildNodes { node, _ in
+            if node.name == "Yard"{
+                node.removeFromParentNode()
+            }
+        }
+        
+        //Add yard to the scene
+        sceneView.scene.rootNode.addChildNode(yardNode)
+        isYardPlaced = true
+    }
+    
+    func createFloor(planeAnchor: ARPlaneAnchor) -> SCNNode {
+        let extent = planeAnchor.extent
+        let width = CGFloat(extent.x)
+        let height = CGFloat(extent.z)
+        
+        let plane = SCNPlane(width: width, height: height)
+        plane.firstMaterial?.diffuse.contents = UIColor.blue
+        
+        let node = SCNNode(geometry: plane)
+        node.eulerAngles.x = -.pi / 2
+        node.opacity = 0.125
+        
+        return node
     }
     
     func addChilds(to node: SCNNode, array: [SCNNode]) {
@@ -115,5 +141,33 @@ extension ViewController {
         let leaves = SCNNode(geometry: sphere)
         
         return leaves
+    }
+}
+
+// MARK: - IB Actions
+extension ViewController {
+    @IBAction func screenTapped(_ sender: UITapGestureRecognizer) {
+        if isYardPlaced {
+            
+        } else {
+            let location = sender.location(in: sceneView)
+            guard let result = sceneView.hitTest(location, types: [.existingPlaneUsingExtent]).first else { return }
+            addYard(at: result)
+        }
+    }
+}
+
+// MARK: - ARSCNViewDelegate
+extension ViewController {
+    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+        guard let planeAnchor = anchor as? ARPlaneAnchor else { return }
+        guard !isYardPlaced else { return }
+        
+        let floor = createFloor(planeAnchor: planeAnchor)
+        floor.name = "Yard"
+        node.addChildNode(floor)
+        
+        placeCounter += 1
+        print(placeCounter)
     }
 }
