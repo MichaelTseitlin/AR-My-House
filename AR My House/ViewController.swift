@@ -147,13 +147,9 @@ extension ViewController {
 // MARK: - IB Actions
 extension ViewController {
     @IBAction func screenTapped(_ sender: UITapGestureRecognizer) {
-        if isYardPlaced {
-            
-        } else {
-            let location = sender.location(in: sceneView)
-            guard let result = sceneView.hitTest(location, types: [.existingPlaneUsingExtent]).first else { return }
-            addYard(at: result)
-        }
+        let location = sender.location(in: sceneView)
+        guard let result = sceneView.hitTest(location, types: [.existingPlaneUsingExtent]).first else { return }
+        addYard(at: result)
     }
 }
 
