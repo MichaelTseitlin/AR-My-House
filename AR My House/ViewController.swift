@@ -12,8 +12,8 @@ import ARKit
 
 class ViewController: UIViewController, ARSCNViewDelegate {
     
-    var placeCounter = 0
-    var isYardPlaced = false
+    private var placeCounter = 0
+    private var isYardPlaced = false
     
     @IBOutlet var sceneView: ARSCNView!
     
@@ -53,7 +53,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 
 // MARK: - Custom methods
 extension ViewController {
-    func addYard(at result: ARHitTestResult) {
+    private func addYard(at result: ARHitTestResult) {
         let yardScene = SCNScene(named: "art.scnassets/Yard.scn")
         guard let yardNode = yardScene?.rootNode.childNode(withName: "Yard", recursively: false) else { return }
         
@@ -76,7 +76,7 @@ extension ViewController {
         isYardPlaced = true
     }
     
-    func createFloor(planeAnchor: ARPlaneAnchor) -> SCNNode {
+    private func createFloor(planeAnchor: ARPlaneAnchor) -> SCNNode {
         let extent = planeAnchor.extent
         let width = CGFloat(extent.x)
         let height = CGFloat(extent.z)
@@ -91,13 +91,13 @@ extension ViewController {
         return node
     }
     
-    func addChilds(to node: SCNNode, array: [SCNNode]) {
+    private func addChilds(to node: SCNNode, array: [SCNNode]) {
         for tree in array {
             node.addChildNode(tree)
         }
     }
     
-    func getTreesWithPositions() -> [SCNNode]{
+    private func getTreesWithPositions() -> [SCNNode]{
         var startPosition = SCNVector3(7, 2.5, -10)
         var arrayOfTrees = [SCNNode]()
         for _ in 0...2 {
@@ -109,7 +109,7 @@ extension ViewController {
         return arrayOfTrees
     }
     
-    func getTreeNode() -> SCNNode {
+    private func getTreeNode() -> SCNNode {
         let bark = getBarkNode()
         bark.eulerAngles.x = -.pi / 2
         
@@ -125,7 +125,7 @@ extension ViewController {
         return tree
     }
     
-    func getBarkNode() -> SCNNode {
+    private func getBarkNode() -> SCNNode {
         let cylinder = SCNCylinder(radius: 0.3, height: 5)
         cylinder.firstMaterial?.diffuse.contents = #colorLiteral(red: 0.3098039329, green: 0.2039215714, blue: 0.03921568766, alpha: 1)
         
@@ -134,7 +134,7 @@ extension ViewController {
         return bark
     }
     
-    func getLeavesNode() -> SCNNode {
+    private func getLeavesNode() -> SCNNode {
         let sphere = SCNSphere(radius: 2)
         sphere.firstMaterial?.diffuse.contents = #colorLiteral(red: 0.1960784346, green: 0.3411764801, blue: 0.1019607857, alpha: 1)
         
